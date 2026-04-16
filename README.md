@@ -1,104 +1,42 @@
-# Sistema CLI de Monitoramento da Cultura do Tomate
+# AgroVision IA - Sistema de Monitorização da Cultura do Tomate
 
-## 1) Problema tratado
+## 1. Problema e Contexto (Agronegócio)
+Este projeto aborda um dos grandes desafios na horticultura moderna: a gestão de riscos fitossanitários baseada em dados ambientais. Focamos na cultura do tomate, uma das mais sensíveis a variações de temperatura e humidade.
 
-Este projeto simula um sistema de apoio à decisão para o agronegócio, focado na cultura do tomate.
-A proposta é monitorar **temperatura** e **umidade relativa do ar** para apoiar o controle de pragas e doenças,
-principalmente riscos ligados a fungos.
+O AgroVision IA atua na detecção precoce de condições favoráveis ao aparecimento de fungos (como a requeima e a pinta-preta) e problemas fisiológicos. O sistema não apenas regista dados, mas orienta o produtor através de protocolos de decisão, sugerindo inspeções visuais e ações preventivas diretas em campo.
 
-### Regras de negócio implementadas
+## 2. Inovação e Diferencial
+A solução diferencia-se pela sua abordagem de apoio à decisão assistida:
+* Protocolo de Verificação: Ao detetar humidade crítica, o sistema apresenta sinais visuais específicos (como manchas ou lesões) que o produtor deve procurar antes de confirmar uma aplicação química.
+* Interação em Tempo Real: Fornece recomendações imediatas no prompt de comando para correção de irrigação ou pulverização.
+* Gestão de Dados Robusta: Combina a agilidade da memória local e ficheiros JSON com a segurança institucional de um banco de dados Oracle.
 
-- **Umidade baixa** gera riscos de:
-  - Paralisação do crescimento
-  - Murcha e transpiração excessiva
-  - Aumento de pragas (mosca-branca e pulgão)
-- **Umidade alta** gera riscos de:
-  - Doenças fúngicas e bacterianas (requeima, pinta-preta)
-  - Podridão apical (fundo preto)
-  - Rachaduras
-  - Queda de flores
-  - Raízes sufocadas
-- **Alerta de fungo**:
-  - Se houver condição de fungo (umidade alta), o sistema exige verificação visual.
-  - Se o fungo for confirmado, recomenda: **"Aplicação do Fungicida X via pulverização"**.
+## 3. Requisitos Técnicos Implementados
+O sistema foi desenvolvido seguindo rigorosamente os padrões de engenharia de software estudados nos capítulos 3 a 6:
 
-## 2) Inovação da solução
+* Cap 3 (Subalgoritmos): Modularização completa do código. Todas as ações (cálculo de risco, conexão ao banco, logs) estão encapsuladas em funções com parâmetros e retornos definidos.
+* Cap 4 (Estruturas de Dados):
+  - Listas: Utilizadas como tabela de memória dinâmica para gerir os registos durante a execução.
+  - Dicionários: Estrutura base para cada registo de monitorização, facilitando o acesso às chaves de dados.
+  - Tuplas: Armazenamento de constantes de negócio (mensagens de erro e sinais de fungo) que não devem ser alteradas.
+* Cap 5 (Manipulação de Arquivos):
+  - Persistência em JSON para exportação de relatórios.
+  - Geração de ficheiro de Log (TXT) para auditoria de todas as operações realizadas no sistema.
+* Cap 6 (Banco de Dados Oracle): Integração completa com Oracle Database através da biblioteca "oracledb", implementando o ciclo CRUD (Create, Read, Update, Delete) para gestão histórica.
 
-A inovação é combinar, em um único fluxo CLI:
+## 4. Estrutura do Repositório
+* main.py: Script principal contendo toda a lógica do sistema.
+* README.txt: Documentação detalhada da solução (este ficheiro).
+* operacoes.log: Registo de eventos do sistema (gerado automaticamente).
+* monitoramentos.json: Dados exportados para integração (gerado opcionalmente).
 
-- Análise imediata de risco ambiental (temperatura + umidade)
-- Protocolo operacional de campo (checagem visual guiada)
-- Recomendação de ação padronizada para tomada de decisão rápida
-- Persistência híbrida:
-  - memória local (lista de dicionários)
-  - exportação em JSON
-  - CRUD em Oracle para histórico institucional
+## 5. Como Executar
+1. Pré-requisitos: Certifique-se de ter o Python 3.10+ instalado e a biblioteca do Oracle. No terminal, execute:
+   pip install oracledb
 
-Isso facilita rastreabilidade, padronização da resposta agronômica e suporte acadêmico para os capítulos de algoritmos, estruturas de dados, arquivos e banco relacional.
+2. Execução:
+   python main.py
 
-## 3) Requisitos técnicos atendidos
+3. Fluxo: Utilize o menu numérico para registar novas leituras, consultar o histórico local ou gerir os dados no banco Oracle.
 
-- **Cap 3 (Subalgoritmos)**:
-  - Sistema totalmente modularizado em funções/procedimentos com tipagem explícita.
-- **Cap 4 (Estruturas de Dados)**:
-  - Tuplas para dados imutáveis (problemas de umidade e sinais visuais de fungo)
-  - Dicionários para registro de monitoramento
-  - Lista dinâmica de dicionários como tabela de memória
-- **Cap 5 (Arquivos)**:
-  - `with open` para exportação JSON
-  - `with open` para log TXT (`operacoes.log`)
-- **Cap 6 (Oracle)**:
-  - Biblioteca `oracledb`
-  - Conexão com `try...except`
-  - CRUD com `cursor()`, `execute()` e `commit()`
-  - DDL comentado no topo de `main.py`
-- **Consistência de dados**:
-  - Validação de entradas numéricas com `while` + `try...except ValueError`
-
-## 4) Estrutura esperada
-
-- `main.py` -> codigo principal CLI
-- `README.md` -> este documento
-- `monitoramentos.json` -> gerado na exportação
-- `operacoes.log` -> log TXT de operações
-
-## 5) Como executar
-
-## 5.1 Pre-requisitos
-
-- Python 3.10+
-- Oracle Database acessível (local ou remoto)
-- Biblioteca Oracle para Python:
-
-```bash
-pip install oracledb
-```
-
-## 5.2 Criar tabela no Oracle
-
-No início de `main.py` existe o script DDL comentado.
-Execute esse DDL no seu schema Oracle antes de usar o CRUD.
-
-## 5.3 Rodar aplicação
-
-No terminal, dentro da pasta do projeto:
-
-```bash
-python main.py
-```
-
-## 6) Fluxo de uso
-
-1. Registrar monitoramento (temperatura e umidade).
-2. Ver a classificação e riscos.
-3. Se umidade alta, realizar verificação visual de fungo.
-4. Receber recomendação automática.
-5. Opcionalmente:
-   - Exportar tabela local para JSON
-   - Usar menu Oracle para CRUD
-
-## 7) Observações importantes
-
-- A opção de inserção no Oracle utiliza o **último monitoramento local** registrado.
-- O arquivo de log (`operacoes.log`) registra eventos principais do sistema.
-- Este projeto é didático/acadêmico e pode ser expandido com sensores reais, dashboard web e alertas automatizados.
+---
