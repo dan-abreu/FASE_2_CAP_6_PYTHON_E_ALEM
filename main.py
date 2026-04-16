@@ -18,7 +18,7 @@ import json
 import oracledb
 
 # ============================================================================
-# BLOCO 1 - REGRAS FIXAS E ESTRUTURAS BÁSICAS
+# REGRAS FIXAS E ESTRUTURAS BÁSICAS
 # Contém dados imutáveis (tuplas) e o tipo de registro usado em memória.
 # ============================================================================
 # Listas de problemas e sinais visuais
@@ -44,7 +44,7 @@ SINAIS_VISUAIS_FUNGO = [
 ]
 
 # ============================================================================
-# BLOCO 2 - UTILITÁRIOS DE ARQUIVO E ENTRADA
+# UTILITÁRIOS DE ARQUIVO E ENTRADA
 # Funções genéricas para log e validação robusta de entradas do usuário.
 # ============================================================================
 def registrar_log(mensagem, arquivo_log="operacoes.log"):
@@ -89,7 +89,7 @@ def ler_sim_ou_nao(prompt):
 
 
 # ============================================================================
-# BLOCO 3 - REGRAS DE NEGÓCIO (TOMATE/FUNGO)
+# REGRAS DE NEGÓCIO (TOMATE/FUNGO)
 # Núcleo de decisão: classifica umidade, calcula risco e define recomendação.
 # ============================================================================
 def classificar_umidade(umidade):
@@ -119,7 +119,7 @@ def montar_recomendacao_fungo(fungo_confirmado):
 
 
 # ============================================================================
-# BLOCO 4 - FLUXO DE MONITORAMENTO LOCAL
+# FLUXO DE MONITORAMENTO LOCAL
 # Coleta dados, aplica regras, monta o registro e mantém a tabela em memória.
 # ============================================================================
 def coletar_monitoramento(tabela_memoria):
@@ -198,7 +198,7 @@ def listar_tabela_memoria(tabela_memoria):
     print("-" * 60)
 
 # ============================================================================
-# BLOCO 5 - EXPORTAÇÃO E PERSISTÊNCIA LOCAL
+# EXPORTAÇÃO E PERSISTÊNCIA LOCAL
 # Salva a tabela em JSON e registra eventos em log para rastreabilidade.
 # ============================================================================
 def exportar_tabela_para_json(tabela_memoria, caminho_arquivo="monitoramentos.json"):
@@ -211,41 +211,46 @@ def exportar_tabela_para_json(tabela_memoria, caminho_arquivo="monitoramentos.js
 
 
 # ============================================================================
-# BLOCO 6 - CONEXÃO ORACLE
+# CONEXÃO ORACLE
 # Realiza a conexão ao banco com tratamento de exceções.
 # ============================================================================
-def conectar_oracle():
-    # Conecta ao banco de dados Oracle
+def conectar_oracle() -> Any:
+    """Conecta ao Oracle com tratamento de exceções."""
+    if oracledb is None:
+        print("Biblioteca 'oracledb' não instalada. Execute: pip install oracledb")
+        registrar_log("Falha de conexão Oracle: biblioteca oracledb ausente")
+        return None
+
     print("\n=== Conexão Oracle ===")
-    usuario = input("Usuário: ").strip()
-    senha = input("Senha: ").strip()
-    dsn = input("DSN (ex: localhost:1521/XEPDB1): ").strip()
+    usuario: str = input("Usuário: ").strip()
+    senha: str = input("Senha: ").strip()
+    dsn: str = input("DSN (ex: localhost:1521/XEPDB1): ").strip()
 
     try:
-        conexao = oracledb.connect(user=usuario, password=senha, dsn=dsn)
+        conexao: Any = oracledb.connect(user=usuario, password=senha, dsn=dsn)
         print("Conexão Oracle realizada com sucesso.")
         registrar_log("Conexão Oracle estabelecida")
         return conexao
     except Exception as exc:
-        print(f"Erro ao conectar no banco: {exc}")
+        print(f"Erro ao conectar no Oracle: {exc}")
         registrar_log(f"Erro de conexão Oracle: {exc}")
         return None
 
 
 # ============================================================================
-# BLOCO 7 - CRUD ORACLE
+# CRUD ORACLE
 # Funções de CREATE, READ, UPDATE e DELETE na tabela monitoramento_tomate.
 # ============================================================================
-def inserir_monitoramento_oracle(conexao, registro):
-    # Insere um novo registro de monitoramento no banco de dados
-    sql = (
+def inserir_monitoramento_oracle(conexao: Any, registro: RegistroMonitoramento) -> None:
+    """CREATE no Oracle usando cursor, execute e commit."""
+    sql: str = (
         "INSERT INTO monitoramento_tomate "
         "(data_hora, temperatura, umidade, classificacao_umidade, alerta_fungo, fungo_confirmado, recomendacao) "
         "VALUES (:1, :2, :3, :4, :5, :6, :7)"
     )
 
-    alerta = "S" if registro["alerta_fungo"] else "N"
-    fungo = "S" if registro["fungo_confirmado"] else "N"
+    alerta: str = "S" if registro["alerta_fungo"] else "N"
+    fungo: str = "S" if registro["fungo_confirmado"] else "N"
 
     cursor = conexao.cursor()
     try:
@@ -262,18 +267,18 @@ def inserir_monitoramento_oracle(conexao, registro):
             ],
         )
         conexao.commit()
-        print("Registro salvo no banco Oracle com sucesso.")
-        registrar_log("Inserção no banco Oracle realizada")
+        print("Registro inserido no Oracle com sucesso.")
+        registrar_log("CREATE Oracle executado com sucesso")
     except Exception as exc:
-        print(f"Erro ao inserir no banco: {exc}")
-        registrar_log(f"Erro na inserção Oracle: {exc}")
+        print(f"Erro ao inserir no Oracle: {exc}")
+        registrar_log(f"Erro no CREATE Oracle: {exc}")
     finally:
         cursor.close()
 
 
-def listar_monitoramentos_oracle(conexao):
-    # Busca e exibe todos os registros salvos no banco
-    sql = (
+def listar_monitoramentos_oracle(conexao: Any) -> None:
+    """READ no Oracle."""
+    sql: str = (
         "SELECT id_monitoramento, data_hora, temperatura, umidade, classificacao_umidade, "
         "alerta_fungo, fungo_confirmado, recomendacao "
         "FROM monitoramento_tomate ORDER BY id_monitoramento"
@@ -282,156 +287,159 @@ def listar_monitoramentos_oracle(conexao):
     cursor = conexao.cursor()
     try:
         cursor.execute(sql)
-        linhas = cursor.fetchall()
-        
-        if len(linhas) == 0:
-            print("Nenhum registro encontrado no banco de dados.")
+        linhas: list[tuple[Any, ...]] = cursor.fetchall()
+        if not linhas:
+            print("Nenhum registro encontrado na tabela Oracle.")
             return
 
-        print("\n=== Registros no Banco (Oracle) ===")
+        print("\n=== Registros Oracle ===")
         for linha in linhas:
             print("-" * 60)
-            print(f"ID: {linha[0]} | Data/Hora: {linha[1]} | Temp: {linha[2]} C | Umidade: {linha[3]}%")
-            print(f"Classificação: {linha[4]} | Alerta fungo: {linha[5]} | Fungo confirmado: {linha[6]}")
+            print(
+                f"ID: {linha[0]} | Data/Hora: {linha[1]} | Temp: {linha[2]} C | Umidade: {linha[3]}%"
+            )
+            print(
+                f"Classificação: {linha[4]} | Alerta fungo: {linha[5]} | Fungo confirmado: {linha[6]}"
+            )
             print(f"Recomendação: {linha[7]}")
         print("-" * 60)
+        registrar_log("READ Oracle executado com sucesso")
     except Exception as exc:
-        print(f"Erro ao listar os registros: {exc}")
-        registrar_log(f"Erro na consulta Oracle: {exc}")
+        print(f"Erro ao listar Oracle: {exc}")
+        registrar_log(f"Erro no READ Oracle: {exc}")
     finally:
         cursor.close()
 
 
-def atualizar_recomendacao_oracle(conexao):
-    # Atualiza o texto de recomendação de um monitoramento específico
-    id_monitoramento = ler_inteiro_menu("Informe o ID para atualizar a recomendação: ")
-    nova_recomendacao = input("Nova recomendação: ").strip()
+def atualizar_recomendacao_oracle(conexao: Any) -> None:
+    """UPDATE no Oracle."""
+    id_monitoramento: int = ler_inteiro_menu("Informe o ID para atualizar recomendação: ")
+    nova_recomendacao: str = input("Nova recomendação: ").strip()
 
-    sql = "UPDATE monitoramento_tomate SET recomendacao = :1 WHERE id_monitoramento = :2"
+    sql: str = "UPDATE monitoramento_tomate SET recomendacao = :1 WHERE id_monitoramento = :2"
     cursor = conexao.cursor()
     try:
         cursor.execute(sql, [nova_recomendacao, id_monitoramento])
         conexao.commit()
-        
         if cursor.rowcount == 0:
-            print("Nenhum registro foi atualizado. Verifique se o ID existe.")
+            print("Nenhum registro atualizado (ID não encontrado).")
         else:
-            print("Recomendação atualizada com sucesso.")
-            registrar_log(f"Update realizado no ID {id_monitoramento}")
+            print("Registro atualizado com sucesso.")
+            registrar_log(f"UPDATE Oracle executado: id={id_monitoramento}")
     except Exception as exc:
-        print(f"Erro ao atualizar o registro: {exc}")
-        registrar_log(f"Erro no update Oracle: {exc}")
+        print(f"Erro ao atualizar Oracle: {exc}")
+        registrar_log(f"Erro no UPDATE Oracle: {exc}")
     finally:
         cursor.close()
 
 
-def excluir_monitoramento_oracle(conexao):
-    # Remove um registro do banco pelo ID
-    id_monitoramento = ler_inteiro_menu("Informe o ID do registro que deseja excluir: ")
+def excluir_monitoramento_oracle(conexao: Any) -> None:
+    """DELETE no Oracle."""
+    id_monitoramento: int = ler_inteiro_menu("Informe o ID para excluir: ")
 
-    sql = "DELETE FROM monitoramento_tomate WHERE id_monitoramento = :1"
+    sql: str = "DELETE FROM monitoramento_tomate WHERE id_monitoramento = :1"
     cursor = conexao.cursor()
     try:
         cursor.execute(sql, [id_monitoramento])
         conexao.commit()
-        
         if cursor.rowcount == 0:
-            print("Nenhum registro foi excluído. Verifique se o ID existe.")
+            print("Nenhum registro excluído (ID não encontrado).")
         else:
             print("Registro excluído com sucesso.")
-            registrar_log(f"Exclusão realizada no ID {id_monitoramento}")
+            registrar_log(f"DELETE Oracle executado: id={id_monitoramento}")
     except Exception as exc:
-        print(f"Erro ao excluir o registro: {exc}")
-        registrar_log(f"Erro no delete Oracle: {exc}")
+        print(f"Erro ao excluir Oracle: {exc}")
+        registrar_log(f"Erro no DELETE Oracle: {exc}")
     finally:
         cursor.close()
 
+
 # ============================================================================
-# BLOCO 8 - MENUS DE NAVEGAÇÃO
+# MENUS DE NAVEGAÇÃO
 # Orquestram os fluxos local e Oracle por meio de menus CLI.
 # ============================================================================
-def menu_crud_oracle(tabela_memoria):
-    # Gerencia as operacoes de banco de dados
-    conexao = None
+def menu_crud_oracle(tabela_memoria: list[RegistroMonitoramento]) -> None:
+    """Submenu CRUD do Oracle (Cap 6)."""
+    conexao: Any = None
 
     while True:
-        print("\n=== Menu Banco de Dados (Oracle) ===")
+        print("\n=== Menu Oracle CRUD ===")
         print("1. Conectar ao Oracle")
-        print("2. CREATE - Salvar último registro no banco")
-        print("3. READ   - Listar registros do banco")
-        print("4. UPDATE - Atualizar uma recomendação")
-        print("5. DELETE - Excluir um registro")
+        print("2. CREATE - Inserir último monitoramento local")
+        print("3. READ   - Listar monitoramentos")
+        print("4. UPDATE - Atualizar recomendação")
+        print("5. DELETE - Excluir monitoramento")
         print("6. Desconectar")
         print("0. Voltar ao menu principal")
 
-        opcao = ler_inteiro_menu("Escolha: ")
+        opcao: int = ler_inteiro_menu("Escolha: ")
 
         if opcao == 1:
             if conexao is not None:
-                print("Você já está conectado.")
+                print("Já existe conexão ativa.")
             else:
                 conexao = conectar_oracle()
 
         elif opcao == 2:
             if conexao is None:
-                print("Por favor, conecte ao banco primeiro (Opção 1).")
+                print("Conecte ao Oracle primeiro.")
                 continue
-            if len(tabela_memoria) == 0:
-                print("Não há dados locais para salvar no banco. Registre algo primeiro.")
+            if not tabela_memoria:
+                print("Não há monitoramentos locais para inserir.")
                 continue
             inserir_monitoramento_oracle(conexao, tabela_memoria[-1])
 
         elif opcao == 3:
             if conexao is None:
-                print("Por favor, conecte ao banco primeiro (Opção 1).")
+                print("Conecte ao Oracle primeiro.")
                 continue
             listar_monitoramentos_oracle(conexao)
 
         elif opcao == 4:
             if conexao is None:
-                print("Por favor, conecte ao banco primeiro (Opção 1).")
+                print("Conecte ao Oracle primeiro.")
                 continue
             atualizar_recomendacao_oracle(conexao)
 
         elif opcao == 5:
             if conexao is None:
-                print("Por favor, conecte ao banco primeiro (Opção 1).")
+                print("Conecte ao Oracle primeiro.")
                 continue
             excluir_monitoramento_oracle(conexao)
 
         elif opcao == 6:
             if conexao is None:
-                print("Não há conexão aberta no momento.")
+                print("Nenhuma conexão ativa para fechar.")
             else:
                 conexao.close()
                 conexao = None
-                print("Conexão fechada com sucesso.")
-                registrar_log("Conexão Oracle encerrada pelo usuario")
+                print("Conexão encerrada.")
+                registrar_log("Conexão Oracle encerrada")
 
         elif opcao == 0:
             if conexao is not None:
                 conexao.close()
-                registrar_log("Conexão Oracle encerrada ao voltar pro menu")
+                registrar_log("Conexão Oracle encerrada ao sair do submenu")
             break
 
         else:
             print("Opção inválida.")
 
 
-def menu_principal():
-    # Ponto de partida do sistema
-    tabela_memoria = []
+def menu_principal() -> None:
+    """Fluxo principal da aplicação CLI."""
+    tabela_memoria: list[RegistroMonitoramento] = []
     registrar_log("Sistema iniciado")
 
     while True:
-        print("\n=== AgroVision IA - Monitoramento de Tomate ===")
-        print("1. Registrar nova leitura (Temp/Umidade)")
-        print("2. Ver histórico local")
-        print("3. Exportar histórico para JSON")
-        print("4. Acessar Banco de Dados (Oracle)")
+        print("\n=== Sistema de Monitoramento - Cultura do Tomate ===")
+        print("1. Registrar novo monitoramento")
+        print("2. Listar tabela de memória")
+        print("3. Exportar tabela para JSON")
+        print("4. Menu Oracle CRUD")
         print("0. Sair")
 
-        opcao = ler_inteiro_menu("Escolha: ")
+        opcao: int = ler_inteiro_menu("Escolha: ")
 
         if opcao == 1:
             coletar_monitoramento(tabela_memoria)
@@ -443,12 +451,14 @@ def menu_principal():
             menu_crud_oracle(tabela_memoria)
         elif opcao == 0:
             registrar_log("Sistema finalizado")
-            print("Encerrando sistema...")
+            print("Encerrando sistema. Até logo.")
             break
         else:
             print("Opção inválida. Tente novamente.")
+
+
 # ============================================================================
-# BLOCO 9 - PONTO DE ENTRADA
+# PONTO DE ENTRADA
 # Inicia o programa quando executado diretamente pelo Python.
 # ============================================================================
 if __name__ == "__main__":
