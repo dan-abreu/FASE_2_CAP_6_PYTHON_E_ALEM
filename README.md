@@ -2,72 +2,72 @@
 
 ## 1) Problema tratado
 
-Este projeto simula um sistema de apoio a decisao para o agronegocio, focado na cultura do tomate.
-A proposta e monitorar **temperatura** e **umidade relativa do ar** para apoiar o controle de pragas e doencas,
+Este projeto simula um sistema de apoio à decisão para o agronegócio, focado na cultura do tomate.
+A proposta é monitorar **temperatura** e **umidade relativa do ar** para apoiar o controle de pragas e doenças,
 principalmente riscos ligados a fungos.
 
-### Regras de negocio implementadas
+### Regras de negócio implementadas
 
 - **Umidade baixa** gera riscos de:
-  - Paralisacao do crescimento
-  - Murcha e transpiracao excessiva
-  - Aumento de pragas (mosca-branca e pulgao)
+  - Paralisação do crescimento
+  - Murcha e transpiração excessiva
+  - Aumento de pragas (mosca-branca e pulgão)
 - **Umidade alta** gera riscos de:
-  - Doencas fungicas e bacterianas (requeima, pinta-preta)
-  - Podridao apical (fundo preto)
+  - Doenças fúngicas e bacterianas (requeima, pinta-preta)
+  - Podridão apical (fundo preto)
   - Rachaduras
   - Queda de flores
-  - Raizes sufocadas
+  - Raízes sufocadas
 - **Alerta de fungo**:
-  - Se houver condicao de fungo (umidade alta), o sistema exige verificacao visual.
-  - Se o fungo for confirmado, recomenda: **"Aplicacao do Fungicida X via pulverizacao"**.
+  - Se houver condição de fungo (umidade alta), o sistema exige verificação visual.
+  - Se o fungo for confirmado, recomenda: **"Aplicação do Fungicida X via pulverização"**.
 
-## 2) Inovacao da solucao
+## 2) Inovação da solução
 
-A inovacao e combinar, em um unico fluxo CLI:
+A inovação é combinar, em um único fluxo CLI:
 
-- Analise imediata de risco ambiental (temperatura + umidade)
+- Análise imediata de risco ambiental (temperatura + umidade)
 - Protocolo operacional de campo (checagem visual guiada)
-- Recomendacao de acao padronizada para tomada de decisao rapida
-- Persistencia hibrida:
-  - memoria local (lista de dicionarios)
-  - exportacao em JSON
-  - CRUD em Oracle para historico institucional
+- Recomendação de ação padronizada para tomada de decisão rápida
+- Persistência híbrida:
+  - memória local (lista de dicionários)
+  - exportação em JSON
+  - CRUD em Oracle para histórico institucional
 
-Isso facilita rastreabilidade, padronizacao da resposta agronomica e suporte academico para os capitulos de algoritmos, estruturas de dados, arquivos e banco relacional.
+Isso facilita rastreabilidade, padronização da resposta agronômica e suporte acadêmico para os capítulos de algoritmos, estruturas de dados, arquivos e banco relacional.
 
-## 3) Requisitos tecnicos atendidos
+## 3) Requisitos técnicos atendidos
 
 - **Cap 3 (Subalgoritmos)**:
-  - Sistema totalmente modularizado em funcoes/procedimentos com tipagem explicita.
+  - Sistema totalmente modularizado em funções/procedimentos com tipagem explícita.
 - **Cap 4 (Estruturas de Dados)**:
-  - Tuplas para dados imutaveis (problemas de umidade e sinais visuais de fungo)
-  - Dicionarios para registro de monitoramento
-  - Lista dinamica de dicionarios como tabela de memoria
+  - Tuplas para dados imutáveis (problemas de umidade e sinais visuais de fungo)
+  - Dicionários para registro de monitoramento
+  - Lista dinâmica de dicionários como tabela de memória
 - **Cap 5 (Arquivos)**:
-  - `with open` para exportacao JSON
+  - `with open` para exportação JSON
   - `with open` para log TXT (`operacoes.log`)
 - **Cap 6 (Oracle)**:
   - Biblioteca `oracledb`
-  - Conexao com `try...except`
+  - Conexão com `try...except`
   - CRUD com `cursor()`, `execute()` e `commit()`
   - DDL comentado no topo de `main.py`
-- **Consistencia de dados**:
-  - Validacao de entradas numericas com `while` + `try...except ValueError`
+- **Consistência de dados**:
+  - Validação de entradas numéricas com `while` + `try...except ValueError`
 
 ## 4) Estrutura esperada
 
 - `main.py` -> codigo principal CLI
 - `README.md` -> este documento
-- `monitoramentos.json` -> gerado na exportacao
-- `operacoes.log` -> log TXT de operacoes
+- `monitoramentos.json` -> gerado na exportação
+- `operacoes.log` -> log TXT de operações
 
 ## 5) Como executar
 
 ## 5.1 Pre-requisitos
 
 - Python 3.10+
-- Oracle Database acessivel (local ou remoto)
+- Oracle Database acessível (local ou remoto)
 - Biblioteca Oracle para Python:
 
 ```bash
@@ -76,10 +76,10 @@ pip install oracledb
 
 ## 5.2 Criar tabela no Oracle
 
-No inicio de `main.py` existe o script DDL comentado.
+No início de `main.py` existe o script DDL comentado.
 Execute esse DDL no seu schema Oracle antes de usar o CRUD.
 
-## 5.3 Rodar aplicacao
+## 5.3 Rodar aplicação
 
 No terminal, dentro da pasta do projeto:
 
@@ -90,15 +90,15 @@ python main.py
 ## 6) Fluxo de uso
 
 1. Registrar monitoramento (temperatura e umidade).
-2. Ver a classificacao e riscos.
-3. Se umidade alta, realizar verificacao visual de fungo.
-4. Receber recomendacao automatica.
+2. Ver a classificação e riscos.
+3. Se umidade alta, realizar verificação visual de fungo.
+4. Receber recomendação automática.
 5. Opcionalmente:
    - Exportar tabela local para JSON
    - Usar menu Oracle para CRUD
 
-## 7) Observacoes importantes
+## 7) Observações importantes
 
-- A opcao de insercao no Oracle utiliza o **ultimo monitoramento local** registrado.
+- A opção de inserção no Oracle utiliza o **último monitoramento local** registrado.
 - O arquivo de log (`operacoes.log`) registra eventos principais do sistema.
-- Este projeto e didatico/academico e pode ser expandido com sensores reais, dashboard web e alertas automatizados.
+- Este projeto é didático/acadêmico e pode ser expandido com sensores reais, dashboard web e alertas automatizados.
