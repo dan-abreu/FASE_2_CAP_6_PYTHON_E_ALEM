@@ -25,7 +25,10 @@ try:
 except ModuleNotFoundError:
     oracledb = None
 
-# Tuplas (dados imutáveis) conforme requisito do Cap 4
+# ============================================================================
+# BLOCO 1 - REGRAS FIXAS E ESTRUTURAS BÁSICAS
+# Contém dados imutáveis (tuplas) e o tipo de registro usado em memória.
+# ============================================================================
 PROBLEMAS_UMIDADE_BAIXA: tuple[str, ...] = (
     "Paralisação do crescimento",
     "Murcha e transpiração excessiva",
@@ -50,6 +53,10 @@ SINAIS_VISUAIS_FUNGO: tuple[str, ...] = (
 RegistroMonitoramento = dict[str, Any]
 
 
+# ============================================================================
+# BLOCO 2 - UTILITÁRIOS DE ARQUIVO E ENTRADA
+# Funções genéricas para log e validação robusta de entradas do usuário.
+# ============================================================================
 def registrar_log(mensagem: str, arquivo_log: str = "operacoes.log") -> None:
     """Grava eventos em log TXT comum usando with open."""
     timestamp: str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -93,6 +100,10 @@ def ler_sim_ou_nao(prompt: str) -> bool:
         print("Resposta inválida. Digite 's' para sim ou 'n' para não.")
 
 
+    # ============================================================================
+    # BLOCO 3 - REGRAS DE NEGÓCIO (TOMATE/FUNGO)
+    # Núcleo de decisão: classifica umidade, calcula risco e define recomendação.
+    # ============================================================================
 def classificar_umidade(umidade: float) -> str:
     """Classifica umidade em baixa, adequada ou alta."""
     if umidade < 60.0:
@@ -114,6 +125,10 @@ def montar_recomendacao_fungo(fungo_confirmado: bool) -> str:
     return "Sem confirmação de fungo. Manter monitoramento e prevenção."
 
 
+# ============================================================================
+# BLOCO 4 - FLUXO DE MONITORAMENTO LOCAL
+# Coleta dados, aplica regras, monta o registro e mantém a tabela em memória.
+# ============================================================================
 def coletar_monitoramento(tabela_memoria: list[RegistroMonitoramento]) -> RegistroMonitoramento:
     """Cria um registro de monitoramento e adiciona na tabela em memória."""
     print("\n=== Novo Monitoramento da Cultura do Tomate ===")
@@ -189,6 +204,10 @@ def listar_tabela_memoria(tabela_memoria: list[RegistroMonitoramento]) -> None:
     print("-" * 60)
 
 
+# ============================================================================
+# BLOCO 5 - EXPORTAÇÃO E PERSISTÊNCIA LOCAL
+# Salva a tabela em JSON e registra eventos em log para rastreabilidade.
+# ============================================================================
 def exportar_tabela_para_json(
     tabela_memoria: list[RegistroMonitoramento], caminho_arquivo: str = "monitoramentos.json"
 ) -> None:
@@ -200,6 +219,10 @@ def exportar_tabela_para_json(
     print(f"Exportação concluída: {caminho_arquivo}")
 
 
+# ============================================================================
+# BLOCO 6 - CONEXÃO ORACLE
+# Realiza a conexão ao banco com tratamento de exceções.
+# ============================================================================
 def conectar_oracle() -> Any:
     """Conecta ao Oracle com tratamento de exceções."""
     if oracledb is None:
@@ -223,6 +246,10 @@ def conectar_oracle() -> Any:
         return None
 
 
+    # ============================================================================
+    # BLOCO 7 - CRUD ORACLE
+    # Funções de CREATE, READ, UPDATE e DELETE na tabela monitoramento_tomate.
+    # ============================================================================
 def inserir_monitoramento_oracle(conexao: Any, registro: RegistroMonitoramento) -> None:
     """CREATE no Oracle usando cursor, execute e commit."""
     sql: str = (
@@ -336,6 +363,10 @@ def excluir_monitoramento_oracle(conexao: Any) -> None:
         cursor.close()
 
 
+# ============================================================================
+# BLOCO 8 - MENUS DE NAVEGAÇÃO
+# Orquestram os fluxos local e Oracle por meio de menus CLI.
+# ============================================================================
 def menu_crud_oracle(tabela_memoria: list[RegistroMonitoramento]) -> None:
     """Submenu CRUD do Oracle (Cap 6)."""
     conexao: Any = None
@@ -435,5 +466,9 @@ def menu_principal() -> None:
             print("Opção inválida. Tente novamente.")
 
 
+# ============================================================================
+# BLOCO 9 - PONTO DE ENTRADA
+# Inicia o programa quando executado diretamente pelo Python.
+# ============================================================================
 if __name__ == "__main__":
     menu_principal()
